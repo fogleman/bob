@@ -135,6 +135,7 @@ function wheel() {
 }
 
 function code() {
+    return sphere(0.1).setColor([1, 1, 1]);
     var spheres = [];
     for (var i = 0; i < 8; i++) {
         spheres.push(sphere(0.1).translate([0, 0, i * 0.25]));
@@ -144,7 +145,6 @@ function code() {
 
 function robot() {
     return union(
-        code().translate([0, 1-0.05, 1.5]),
         antenna().translate([0, 0, 6]),
         head().translate([0, 0, 4]),
         eye().translate([-0.4, 0.6, 4.75]),
@@ -155,7 +155,8 @@ function robot() {
         body().translate([0, 0, 0.75]),
         arm().translate([0, 0, 0]).rotateX(-90).translate([-1.125, 0, 3]),
         arm().translate([0, 0, 0]).rotateX(0).translate([1.125, 0, 3]),
-        wheel()
+        wheel(),
+        code().translate([0, 1-0.05, 1.5])
     );
 }
 

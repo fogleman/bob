@@ -1,19 +1,22 @@
 package bob
 
 import (
+	"math"
 	"math/rand"
 
 	. "github.com/fogleman/pt/pt"
 )
 
 type Robot struct {
-	Heading          float64
+	Position         Vector
+	Rotation         float64
 	Tilt             float64
 	Foot             float64
 	LeftArm          float64
 	RightArm         float64
 	Neck             float64
-	Head             float64
+	HeadRotation     float64
+	HeadTilt         float64
 	LeftEye          float64
 	RightEye         float64
 	LeftPupil        float64
@@ -21,10 +24,13 @@ type Robot struct {
 	LeftPupilAspect  float64
 	RightPupilAspect float64
 	Antenna          float64
+	Battery          float64
+	Number           int
 }
 
 func NewRobot() *Robot {
 	robot := &Robot{}
+	robot.Battery = 1
 	robot.LeftEye = 0
 	robot.RightEye = 0
 	robot.LeftPupil = 0.5
@@ -32,51 +38,90 @@ func NewRobot() *Robot {
 	robot.RightPupil = 0.5
 	robot.RightPupilAspect = 1
 	robot.Antenna = 1
-	robot.Head = 0
+	robot.HeadRotation = 0
 	robot.Neck = 0.25
 	robot.Foot = 1
 	robot.LeftArm = -0.5
 	robot.RightArm = 0.5
-	robot.Sleep()
-	robot.Wake()
+	// robot.Sleep()
+	// robot.Wake()
 	return robot
 }
 
 func (robot *Robot) Sleep() {
-	robot.LeftPupil = 0
-	robot.RightPupil = 0
+	robot.Battery = 0
+	robot.LeftPupil = 1
+	robot.RightPupil = 1
+	robot.LeftPupilAspect = 10
+	robot.RightPupilAspect = 10
 	robot.Neck = 0
 	robot.Foot = 0
 	robot.LeftArm = 0
 	robot.RightArm = 0
 	robot.Antenna = 0
+	robot.HeadRotation = 0
+	robot.HeadTilt = 0
+	robot.LeftEye = 0
+	robot.RightEye = 0
 }
 
 func (robot *Robot) Wake() {
 	robot.LeftPupil = 0.5
 	robot.RightPupil = 0.5
-	robot.Neck = 0.25
+	robot.Neck = 0.5
 	robot.Foot = 1
-	robot.LeftArm = 0
-	robot.RightArm = 0
+	robot.LeftArm = 0.25
+	robot.RightArm = 0.25
 	robot.Antenna = 1
+	robot.HeadTilt = 0
+	robot.HeadRotation = 0.25
 }
 
 func (robot *Robot) Random() {
-	robot.Heading = rand.Float64() * 360
+	robot.LeftPupil = rand.Float64()*0.25 + 0.5
+	robot.RightPupil = robot.LeftPupil
+	robot.Battery = rand.Float64()
+	robot.Rotation = rand.Float64() * 360
 	robot.Tilt = 0 //rand.Float64()
 	robot.Foot = rand.Float64()
-	robot.LeftArm = (rand.Float64()*2 - 1) * 0.25
-	robot.RightArm = (rand.Float64()*2 - 1) * 0.25
-	robot.Neck = rand.Float64()
-	robot.Head = rand.Float64()*2 - 1
+	robot.LeftArm = (rand.Float64()*1 - 0) * 0.5
+	robot.RightArm = (rand.Float64()*1 - 0) * 0.5
+	robot.Neck = rand.Float64() * 0.75
+	robot.HeadRotation = rand.Float64()*2 - 1
 	robot.LeftEye = rand.Float64()*0.8 + 0.2
 	robot.RightEye = rand.Float64()*0.8 + 0.2
-	robot.LeftPupil = rand.Float64()
-	robot.RightPupil = rand.Float64()
+	// robot.LeftPupil = rand.Float64()
+	// robot.RightPupil = rand.Float64()
 	// robot.LeftPupilAspect = rand.Float64()
 	// robot.RightPupilAspect = rand.Float64()
 	robot.Antenna = rand.Float64()
+}
+
+func (robot *Robot) PointHead(point Vector) {
+	d := point.Sub(robot.HeadPosition())
+	xy := Vector{d.X, d.Y, 0}.Normalize()
+
+	tilt := math.Atan2(d.Z, Vector{d.X, d.Y, 0}.Length())
+	robot.HeadTilt = -Degrees(tilt) / 30
+
+	a := Radians(robot.Rotation)
+	forward := Vector{math.Sin(a), math.Cos(a), 0}
+
+	dot := Clamp(forward.Dot(xy), -1, 1)
+	robot.HeadRotation = Degrees(math.Acos(dot)) / 90
+	if xy.Cross(forward).Dot(V(0, 0, 1)) < 0 {
+		robot.HeadRotation = -robot.HeadRotation
+	}
+}
+
+func (robot *Robot) PointBody(point Vector) {
+	d := point.Sub(robot.Position)
+	robot.Rotation = Degrees(math.Atan2(d.X, d.Y))
+}
+
+func (robot *Robot) HeadPosition() Vector {
+	z := robot.Foot*0.75 + robot.Neck + 3
+	return robot.Position.Add(V(0, 0, z))
 }
 
 func (robot *Robot) CreateMesh() *Mesh {
@@ -123,7 +168,8 @@ func (robot *Robot) CreateMesh() *Mesh {
 	head.Add(leftEye)
 	head.Add(rightEye)
 	head.Add(antenna)
-	head.Transform(Rotate(V(0, 0, 1), Radians(robot.Head*90)))
+	head.Transform(Rotate(V(1, 0, 0), Radians(robot.HeadTilt*30)))
+	head.Transform(Rotate(V(0, 0, 1), Radians(robot.HeadRotation*90)))
 	head.Transform(Translate(V(0, 0, robot.Neck)))
 	head.Add(neck)
 	head.Transform(Translate(V(0, 0, 3)))
@@ -131,12 +177,12 @@ func (robot *Robot) CreateMesh() *Mesh {
 	// left arm
 	leftArm := robot.arm()
 	leftArm.Transform(Rotate(V(1, 0, 0), Radians(90-robot.LeftArm*90)))
-	leftArm.Transform(Translate(V(-1.125, 0, 2.25)))
+	leftArm.Transform(Translate(V(-1.125, 0, 2.375)))
 
 	// right arm
 	rightArm := robot.arm()
 	rightArm.Transform(Rotate(V(1, 0, 0), Radians(90-robot.RightArm*90)))
-	rightArm.Transform(Translate(V(1.125, 0, 2.25)))
+	rightArm.Transform(Translate(V(1.125, 0, 2.375)))
 
 	// wheel
 	wheel := robot.wheel()
@@ -146,16 +192,29 @@ func (robot *Robot) CreateMesh() *Mesh {
 	body.Add(head)
 	body.Add(leftArm)
 	body.Add(rightArm)
+	for i := 0; i < 8; i++ {
+		color := Black
+		// if float64(i) < robot.Battery*8 {
+		// 	color = HexColor(0x04BFBF)
+		// }
+		if (1<<uint(i))&robot.Number != 0 {
+			color = White
+		}
+		button := robot.button(color)
+		button.Transform(Translate(V(0, 0.95, 0.625+float64(i)*0.25)))
+		body.Add(button)
+	}
 	body.Transform(Translate(V(0, 0, robot.Foot*0.75)))
 	body.Transform(Rotate(V(1, 0, 0), Radians(robot.Tilt*30)))
-	body.Transform(Rotate(V(0, 0, 1), Radians(robot.Heading)))
+	body.Transform(Rotate(V(0, 0, 1), Radians(robot.Rotation)))
 	body.Add(wheel)
+	body.Transform(Translate(robot.Position))
 	return body
 }
 
-func (robot *Robot) code() *Mesh {
-	mesh := codeMesh.Copy()
-	mesh.SetMaterial(GlossyMaterial(Black, 1.5, Radians(10)))
+func (robot *Robot) button(color Color) *Mesh {
+	mesh := buttonMesh.Copy()
+	mesh.SetMaterial(GlossyMaterial(color, 1.5, Radians(10)))
 	return mesh
 }
 
@@ -210,7 +269,7 @@ func (robot *Robot) wheel() *Mesh {
 // load STL meshes on init
 
 var (
-	codeMesh    *Mesh
+	buttonMesh  *Mesh
 	antennaMesh *Mesh
 	headMesh    *Mesh
 	eyeMesh     *Mesh
@@ -222,7 +281,7 @@ var (
 )
 
 func init() {
-	codeMesh = loadMesh("stl/code.stl")
+	buttonMesh = loadMesh("stl/button.stl")
 	antennaMesh = loadMesh("stl/antenna.stl")
 	headMesh = loadMesh("stl/head.stl")
 	eyeMesh = loadMesh("stl/eye.stl")
