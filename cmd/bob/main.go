@@ -63,7 +63,9 @@ func main() {
 		}
 		if x == -1 {
 			robot.Neck = 0.75
+			robot.Antenna = 0.1
 		}
+		robot.Number = -x + 2
 		robot.PointHead(V(2, 10, 3))
 		robots.Add(robot.CreateMesh())
 	}
@@ -72,18 +74,17 @@ func main() {
 
 	material := DiffuseMaterial(White)
 	scene.Add(NewPlane(V(0, 0, 0), V(0, 0, 1), material))
-	// scene.Add(NewPlane(V(0, -10, 0), V(0, 1, 0), material))
 
-	light := LightMaterial(White, 50)
-	scene.Add(NewSphere(V(5, 0, 10), 1, light))
-	scene.Add(NewSphere(V(0, 10, 5), 1, light))
+	light := LightMaterial(White, 100)
+	scene.Add(NewSphere(V(10, 0, 10), 1, light))
+	scene.Add(NewSphere(V(0, 10, 10), 1, light))
 
 	camera := LookAt(V(2, 10, 3), V(0, 0, 3), V(0, 0, 1), 50)
 
-	IterativeRender("out.png", 1, &scene, &camera, NewDirectSampler(), 1920, 1080, 1)
+	IterativeRender("out.png", 1, &scene, &camera, NewDirectSampler(), 2560, 1440, 1)
 
 	sampler := NewSampler(4, 4)
 	sampler.LightMode = LightModeAll
 	sampler.SpecularMode = SpecularModeFirst
-	IterativeRender("out%03d.png", 1000, &scene, &camera, sampler, 1920, 1080, -1)
+	IterativeRender("out%03d.png", 10000, &scene, &camera, sampler, 2560, 1440, -1)
 }

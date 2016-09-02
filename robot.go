@@ -124,6 +124,11 @@ func (robot *Robot) HeadPosition() Vector {
 	return robot.Position.Add(V(0, 0, z))
 }
 
+func (robot *Robot) Heading() Vector {
+	a := Radians(robot.Rotation)
+	return Vector{math.Sin(a), math.Cos(a), 0}
+}
+
 func (robot *Robot) CreateMesh() *Mesh {
 	// left eye
 	leftEye := robot.eye()
