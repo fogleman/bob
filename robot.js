@@ -5,21 +5,27 @@ function roundedCylinder2(options) {
     var capRadius = options.capRadius || 0.1;
     var a = torus({
         ri: capRadius,
-        ro: radius - capRadius
+        ro: radius - capRadius,
+        fni: 32,
+        fno: 64,
     }).translate([0, 0, capRadius]);
     var b = torus({
         ri: capRadius,
-        ro: radius - capRadius
+        ro: radius - capRadius,
+        fni: 32,
+        fno: 64,
     }).translate([0, 0, height - capRadius]);
     var c = CSG.cylinder({
         start: [0, 0, capRadius],
         end: [0, 0, height - capRadius],
         radius: radius,
+        resolution: 64,
     });
     var d = CSG.cylinder({
         start: [0, 0, 0],
         end: [0, 0, height],
         radius: radius - capRadius,
+        resolution: 64,
     });
     return union(a, b, c, d);
 }
@@ -40,7 +46,7 @@ function head() {
         return difference(
             CSG.sphere({
                 radius: 1,
-                resolution: 32,
+                resolution: 64,
             }),
             CSG.cube({
                 center: [0, 0, -10],
@@ -161,14 +167,14 @@ function robot() {
 }
 
 function main() {
-    return robot();
-    return wheel();
-    return arm();
-    return body();
-    return neck();
-    return pupil();
-    return eye();
+    // return robot();
+    // return wheel();
+    // return arm();
+    // return body();
+    // return neck();
+    // return pupil();
+    // return eye();
     return head();
-    return antenna();
-    return code();
+    // return antenna();
+    // return code();
 }
