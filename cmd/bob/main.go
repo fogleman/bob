@@ -8,7 +8,7 @@ import (
 	. "github.com/fogleman/pt/pt"
 )
 
-func main() {
+func main2() {
 	scene := Scene{}
 
 	points := PoissonDisc(-120, -100, 120, 100, 6*1, 32)
@@ -42,36 +42,48 @@ func main() {
 
 	camera := LookAt(V(0, 100, 20), V(0, 65, 0), V(0, 0, 1), 50)
 
-	IterativeRender("out.png", 1, &scene, &camera, NewDirectSampler(), 1920, 1080, 4)
+	IterativeRender("out.png", 1, &scene, &camera, NewDirectSampler(), 2560, 1440, 9)
 
 	sampler := NewSampler(4, 4)
 	sampler.LightMode = LightModeAll
 	sampler.SpecularMode = SpecularModeFirst
-	IterativeRender("out%03d.png", 10000, &scene, &camera, sampler, 1920, 1080, -1)
+	IterativeRender("out%03d.png", 10000, &scene, &camera, sampler, 2560, 1440, -1)
 }
 
-func main2() {
+func main() {
 	scene := Scene{}
 
-	robot := bob.NewRobot()
-	robot.PointHead(V(2, 10, 3))
-	// robot.Sleep()
-	mesh := robot.CreateMesh()
-	scene.Add(mesh)
+	robots := NewMesh(nil)
+	for x := -1; x <= 1; x++ {
+		robot := bob.NewRobot()
+		robot.Position = V(float64(x)*4, 0, 0)
+		robot.PointBody(V(2, 10, 3))
+		if x == 0 {
+			robot.LeftArm = 1
+		}
+		if x == -1 {
+			robot.Neck = 0.75
+		}
+		robot.PointHead(V(2, 10, 3))
+		robots.Add(robot.CreateMesh())
+	}
+	robots.SmoothNormalsThreshold(Radians(30))
+	scene.Add(robots)
 
 	material := DiffuseMaterial(White)
 	scene.Add(NewPlane(V(0, 0, 0), V(0, 0, 1), material))
+	// scene.Add(NewPlane(V(0, -10, 0), V(0, 1, 0), material))
 
 	light := LightMaterial(White, 50)
 	scene.Add(NewSphere(V(5, 0, 10), 1, light))
 	scene.Add(NewSphere(V(0, 10, 5), 1, light))
 
-	camera := LookAt(V(2, 10, 3), V(0, 0, 3), V(0, 0, 1), 40)
+	camera := LookAt(V(2, 10, 3), V(0, 0, 3), V(0, 0, 1), 50)
 
-	IterativeRender("out.png", 1, &scene, &camera, NewDirectSampler(), 1024, 1024, 4)
+	IterativeRender("out.png", 1, &scene, &camera, NewDirectSampler(), 1920, 1080, 1)
 
-	// sampler := NewSampler(4, 4)
-	// sampler.LightMode = LightModeAll
-	// sampler.SpecularMode = SpecularModeFirst
-	// IterativeRender("out%03d.png", 1000, &scene, &camera, sampler, 1920/2, 1080/2, -1)
+	sampler := NewSampler(4, 4)
+	sampler.LightMode = LightModeAll
+	sampler.SpecularMode = SpecularModeFirst
+	IterativeRender("out%03d.png", 1000, &scene, &camera, sampler, 1920, 1080, -1)
 }

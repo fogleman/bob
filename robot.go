@@ -41,8 +41,8 @@ func NewRobot() *Robot {
 	robot.HeadRotation = 0
 	robot.Neck = 0.25
 	robot.Foot = 1
-	robot.LeftArm = -0.5
-	robot.RightArm = 0.5
+	robot.LeftArm = 0
+	robot.RightArm = 0
 	// robot.Sleep()
 	// robot.Wake()
 	return robot
@@ -238,7 +238,7 @@ func (robot *Robot) eye() *Mesh {
 
 func (robot *Robot) pupil() *Mesh {
 	mesh := pupilMesh.Copy()
-	mesh.SetMaterial(GlossyMaterial(Black, 1.5, Radians(10)))
+	mesh.SetMaterial(DiffuseMaterial(Black))
 	return mesh
 }
 
