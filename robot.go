@@ -24,15 +24,11 @@ type Robot struct {
 	LeftPupilAspect  float64
 	RightPupilAspect float64
 	Antenna          float64
-	Battery          float64
 	Number           int
 }
 
 func NewRobot() *Robot {
 	robot := &Robot{}
-	robot.Battery = 1
-	robot.LeftEye = 0
-	robot.RightEye = 0
 	robot.LeftPupil = 0.5
 	robot.LeftPupilAspect = 1
 	robot.RightPupil = 0.5
@@ -41,15 +37,10 @@ func NewRobot() *Robot {
 	robot.HeadRotation = 0
 	robot.Neck = 0.25
 	robot.Foot = 1
-	robot.LeftArm = 0
-	robot.RightArm = 0
-	// robot.Sleep()
-	// robot.Wake()
 	return robot
 }
 
 func (robot *Robot) Sleep() {
-	robot.Battery = 0
 	robot.LeftPupil = 1
 	robot.RightPupil = 1
 	robot.LeftPupilAspect = 10
@@ -74,13 +65,12 @@ func (robot *Robot) Wake() {
 	robot.RightArm = 0.25
 	robot.Antenna = 1
 	robot.HeadTilt = 0
-	robot.HeadRotation = 0.25
+	robot.HeadRotation = 0
 }
 
 func (robot *Robot) Random() {
 	robot.LeftPupil = rand.Float64()*0.25 + 0.5
 	robot.RightPupil = robot.LeftPupil
-	robot.Battery = rand.Float64()
 	robot.Rotation = rand.Float64() * 360
 	robot.Tilt = 0 //rand.Float64()
 	robot.Foot = rand.Float64()
@@ -199,9 +189,6 @@ func (robot *Robot) CreateMesh() *Mesh {
 	body.Add(rightArm)
 	for i := 0; i < 8; i++ {
 		color := Black
-		// if float64(i) < robot.Battery*8 {
-		// 	color = HexColor(0x04BFBF)
-		// }
 		if (1<<uint(i))&robot.Number != 0 {
 			color = White
 		}
